@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área Administrativa - Acesso Exclusivo</title> 
+    <style>
+        /* Estilos de Login (simples e centralizado) */
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f0f4f7; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-card { max-width: 400px; width: 90%; padding: 40px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); text-align: center; }
+        header img { max-width: 150px; height: auto; margin-bottom: 15px; background-color: black; padding: 5px; border-radius: 4px; }
+        h1 { color: #dc3545; font-size: 1.5em; margin-bottom: 5px; }
+        /* F4: Mensagem de exclusividade */
+        p { color: #6c757d; margin-bottom: 25px; font-size: 0.9em; } 
+        
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em;}
+        input[type="email"], input[type="password"] {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; 
+        }
+        .btn-login { 
+            background-color: #007bff; 
+            color: white; 
+            padding: 12px 25px; 
+            border: none; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s; 
+        }
+        .btn-login:hover { background-color: #0056b3; }
+        .alert-erro { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-top: 15px; display: none; }
+
+        .rodape-voltar { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; }
+        .rodape-voltar a { color: #007bff; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <header>
+            <a href="index.html"><img src="AABB-Marca_original.png" alt="Logo AABB Porto Alegre"></a>
+            <h1>Acesso Exclusivo à Área Administrativa</h1>
+            <p>Acesso reservado aos membros da Comissão de Ética e pessoas autorizadas.</p>
+        </header>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" required placeholder="Digite seu e-mail">
+            </div>
+            <div class="form-group">
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" required placeholder="Digite sua senha">
+            </div>
+            
+            <button type="submit" class="btn-login">Entrar</button>
+            <div class="alert-erro" id="alert-erro">E-mail ou senha inválidos. Tente novamente.</div>
+        </form>
+
+        <div class="rodape-voltar">
+            <a href="index.html">← Voltar para a Página Inicial</a>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const alertErro = document.getElementById('alert-erro');
+
+        // F4: Usuários de teste definidos para a Comissão de Ética
+        const ADMIN_USERS = [
+            { email: "luis.brum28@gmail.com", senha: "admin2025" },
+            { email: "luisant@me.com", senha: "admin2025" }
+        ];
+
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const senha = document.getElementById('senha').value.trim();
+
+            alertErro.style.display = 'none';
+
+            // F4: Lógica de validação
+            const user = ADMIN_USERS.find(u => u.email === email && u.senha === senha);
+
+            if (user) {
+                // Se o login for bem-sucedido, redireciona para a área administrativa
+                window.location.href = 'admin.html';
+            } else {
+                // Mostra mensagem de erro
+                alertErro.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+```eof
