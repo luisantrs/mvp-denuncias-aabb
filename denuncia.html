@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fazer Denúncia Ética - AABB Porto Alegre</title>
+    <style>
+        /* Estilos base */
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f0f4f7; color: #333; }
+        .container { max-width: 800px; margin: 50px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        header { text-align: center; margin-bottom: 30px; }
+        header a { text-decoration: none; }
+        header img { max-width: 180px; height: auto; margin-bottom: 15px; background-color: black; padding: 5px; border-radius: 5px; }
+        h1 { color: #0056b3; font-size: 1.8em; margin-bottom: 20px; }
+        
+        /* Estilos de Formulário */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        label small { font-weight: normal; color: #6c757d; display: block; margin-top: 5px; }
+        input[type="text"], input[type="tel"], input[type="email"], textarea {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; 
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        .checkbox-group { display: flex; align-items: center; margin-top: 10px; }
+        .checkbox-group input { margin-right: 10px; }
+        .btn-enviar { background-color: #28a745; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+        .btn-enviar:hover:not(:disabled) { background-color: #1e7e34; }
+        .btn-enviar:disabled { background-color: #90ee90; cursor: not-allowed; }
+        .error-message { color: red; font-size: 0.9em; margin-top: 5px; display: none; }
+
+        .rodape-voltar { text-align: center; margin-top: 40px; padding-top: 15px; border-top: 1px solid #eee; }
+        .rodape-voltar a { color: #007bff; text-decoration: none; font-weight: bold; }
+
+        /* Estilos do MODAL (CAIXA DE DIÁLOGO) */
+        .modal {
+            display: none; /* Escondido por padrão */
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6); /* Fundo escuro */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            max-width: 90%;
+            width: 450px;
+            text-align: center;
+            border-top: 5px solid #28a745;
+        }
+
+        .modal-content h2 {
+            color: #28a745;
+            margin-top: 0;
+            font-size: 1.8em;
+        }
+        .modal-content p {
+            font-size: 1em;
+            margin: 15px 0;
+        }
+        .modal-protocolo {
+            font-size: 2em;
+            font-weight: bold;
+            color: #0056b3;
+            margin: 10px 0 20px 0;
+            display: block;
+        }
+        .modal-btn {
+            display: inline-block; 
+            padding: 10px 20px; 
+            background-color: #007bff; 
+            color: white; 
+            border-radius: 5px; 
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .loading-alert { 
+            background-color: #fff3cd; 
+            border-left: 5px solid #ffc107; 
+            padding: 10px; 
+            margin-top: 10px; 
+            border-radius: 4px; 
+            color: #856404; 
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html"><img src="AABB-Marca_original.png" alt="Logo AABB Porto Alegre"></a>
+            <h1>Fazer Denúncia Ética</h1>
+        </header>
+
+        <form id="denunciaForm">
+            <section id="identificacao-section">
+                <h2>1. Identificação</h2>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="anonima" name="anonima">
+                    <label for="anonima">Desejo fazer denúncia **anônima**</label>
+                </div>
+
+                <div id="campos-identificacao">
+                    <div class="form-group">
+                        <label for="nome">Nome Completo</label>
+                        <input type="text" id="nome" name="nome" placeholder="Seu nome completo">
+                    </div>
+                    <div class="form-group">
+                        <label for="celular">Celular</label>
+                        <input type="tel" id="celular" name="celular" placeholder="(XX) XXXXX-XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">E-mail</label>
+                        <input type="email" id="email" name="email" placeholder="seu.email@exemplo.com">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="associado" name="associado">
+                        <label for="associado">Sou associado(a) do clube</label>
+                    </div>
+                </div>
+            </section>
+
+            <hr>
+
+            <section id="denuncia-section">
+                <h2>2. Detalhes da Ocorrência (*)</h2>
+                <p>⚠️ **Todos os campos abaixo são obrigatórios.**</p>
+
+                <div class="form-group">
+                    <label for="quem">Quem cometeu a infração? (*)</label>
+                    <input type="text" id="quem" name="quem" required 
+                           placeholder="Nome da pessoa, matrícula se souber, ou descrição que permita identificação">
+                    <div class="error-message" id="error-quem">Campo obrigatório.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="quando">Quando ocorreu? (*)</label>
+                    <input type="text" id="quando" name="quando" required 
+                           placeholder="Data e horário. Ex: 15/01/2025 às 14h30">
+                    <div class="error-message" id="error-quando">Campo obrigatório.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="onde">Onde ocorreu? (*)</label>
+                    <input type="text" id="onde" name="onde" required 
+                           placeholder="Local específico do clube. Ex: Quadra de tênis nº 2, vestiário masculino">
+                    <div class="error-message" id="error-onde">Campo obrigatório.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="descricao">Descrição detalhada do descumprimento ético (*) <small>(Mínimo 50 caracteres)</small></label>
+                    <textarea id="descricao" name="descricao" required minlength="50"
+                              placeholder="Descreva objetivamente o que aconteceu: o que foi dito ou feito, como ocorreu, qual foi o impacto."></textarea>
+                    <div class="error-message" id="error-descricao">Mínimo de 50 caracteres obrigatório.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="outros">Outras informações relevantes (*)</label>
+                    <textarea id="outros" name="outros" required 
+                              placeholder="Testemunhas, histórico de ocorrências anteriores, contexto adicional ou qualquer informação que possa auxiliar na análise."></textarea>
+                    <div class="error-message" id="error-outros">Campo obrigatório.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="anexo">Upload de Anexo (Opcional)</label>
+                    <input type="file" id="anexo" name="anexo" multiple accept=".jpg,.png,.pdf,.docx,.mp4">
+                    <small>Máximo 1 arquivo (5MB) - JPG, PNG, PDF, DOCX, MP4.</small>
+                    <div class="error-message" id="error-anexo">Tamanho ou formato de arquivo inválido.</div>
+                </div>
+            </section>
+
+            <hr>
+            
+            <button type="submit" class="btn-enviar" id="btn-enviar">Enviar Denúncia</button>
+            <div class="loading-alert" id="loading-alert">Processando e gerando protocolo... Aguarde.</div>
+        </form>
+
+        <div class="rodape-voltar">
+            <a href="index.html">← Voltar para a Página Inicial</a>
+        </div>
+    </div>
+    
+    <div id="success-modal" class="modal">
+        <div class="modal-content">
+            <h2>✅ Denúncia Registrada</h2>
+            <p>Sua denúncia foi recebida com sucesso. Guarde o número do seu protocolo para consultar o andamento:</p>
+            <span class="modal-protocolo" id="modal-protocolo-output"></span>
+            <p style="font-size: 0.9em; color: #dc3545;">⚠️ **Este protocolo é a única forma de consultar o andamento.**</p>
+            <a href="consulta.html" class="modal-btn">Consultar Andamento</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('denunciaForm');
+        const anonimaCheckbox = document.getElementById('anonima');
+        const camposIdentificacao = document.getElementById('campos-identificacao');
+        const btnEnviar = document.getElementById('btn-enviar');
+        const loadingAlert = document.getElementById('loading-alert');
+        const successModal = document.getElementById('success-modal');
+        const modalProtocoloOutput = document.getElementById('modal-protocolo-output');
+
+
+        // Lógica F2 - Exibir/Ocultar campos de identificação (RN4)
+        anonimaCheckbox.addEventListener('change', function() {
+            camposIdentificacao.style.display = this.checked ? 'none' : 'block';
+            document.querySelectorAll('#campos-identificacao input').forEach(input => {
+                if (input.type !== 'checkbox') {
+                    input.required = !this.checked;
+                }
+            });
+        });
+
+        // Funções de Validação (RNF3)
+        function validateForm() {
+            let isValid = true;
+            
+            // 1. Validação dos Campos da Denúncia (Obrigatórios)
+            const requiredFields = ['quem', 'quando', 'onde', 'descricao', 'outros'];
+            requiredFields.forEach(id => {
+                const field = document.getElementById(id);
+                const errorDiv = document.getElementById(`error-${id}`);
+                
+                if (field.value.trim() === '') {
+                    errorDiv.style.display = 'block';
+                    isValid = false;
+                } else {
+                    errorDiv.style.display = 'none';
+                }
+            });
+
+            // 2. Validação Mínimo 50 caracteres (RN3)
+            const descricaoField = document.getElementById('descricao');
+            const errorDescricao = document.getElementById('error-descricao');
+            if (descricaoField.value.length < 50) {
+                errorDescricao.innerText = 'Mínimo de 50 caracteres obrigatório.';
+                errorDescricao.style.display = 'block';
+                isValid = false;
+            } else {
+                if (descricaoField.value.trim() !== '') {
+                    errorDescricao.style.display = 'none';
+                }
+            }
+            
+            // 3. Validação de Arquivo (RN2 simplificada)
+            const anexoInput = document.getElementById('anexo');
+            if (anexoInput.files.length > 1) { 
+                document.getElementById('error-anexo').innerText = 'Limite de 1 arquivo excedido.';
+                document.getElementById('error-anexo').style.display = 'block';
+                isValid = false;
+            } else if (anexoInput.files.length === 1 && anexoInput.files[0].size > 5 * 1024 * 1024) {
+                 document.getElementById('error-anexo').innerText = 'Tamanho máximo por arquivo é 5 MB.';
+                 document.getElementById('error-anexo').style.display = 'block';
+                 isValid = false;
+            } else {
+                 document.getElementById('error-anexo').style.display = 'none';
+            }
+
+            return isValid;
+        }
+
+        // Simulação de Envio e Exibição do Modal
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (!validateForm()) {
+                return;
+            }
+
+            btnEnviar.disabled = true;
+            loadingAlert.style.display = 'block';
+
+            // --- SIMULAÇÃO DO BACKEND (2 segundos) ---
+            setTimeout(() => {
+                loadingAlert.style.display = 'none';
+                
+                // Simulação da Geração de Protocolo (RN1 ajustada)
+                const ano = new Date().getFullYear();
+                const uuidSimulado = Math.random().toString(36).substring(2, 10).toUpperCase();
+                const protocolo = `CED-${ano}-${uuidSimulado}`;
+                
+                // 1. Preenche e exibe o Modal
+                modalProtocoloOutput.textContent = protocolo;
+                successModal.style.display = 'flex'; // Exibe o modal centralizado
+                
+                // 2. Reseta o formulário e botões
+                form.reset();
+                anonimaCheckbox.dispatchEvent(new Event('change'));
+                btnEnviar.disabled = false;
+            }, 2000);
+        });
+
+        // Inicializa a visibilidade
+        anonimaCheckbox.dispatchEvent(new Event('change'));
+        
+        // Clicar fora do modal (ou implementar um botão "Fechar" se necessário)
+        window.onclick = function(event) {
+            if (event.target == successModal) {
+                successModal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
+```eof

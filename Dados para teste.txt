@@ -1,0 +1,15 @@
+Dados para teste
+
+Denúncia Anônima (só funciona com protocolo): Use CED-2025-1A2B3C4D
+
+Denúncia Identificada (funciona com protocolo ou e-mail):
+
+    Use CED-2025-5E6F7G8H (Protocolo)
+
+    Use joao.silva@exemplo.com (E-mail)
+
+Denúncia Concluída (funciona com protocolo ou e-mail):
+
+    Use CED-2025-9I0J1K2L (Protocolo)
+
+    Use maria.santos@outroexemplo.com (E-mail)

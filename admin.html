@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Comissão de Ética</title>
+    <style>
+        /* Estilos de Admin */
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f0f4f7; color: #333; }
+        .header-admin { background-color: #0056b3; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .header-admin h1 { margin: 0; font-size: 1.5em; }
+        .header-admin img { max-width: 150px; height: auto; margin-right: 20px; background-color: black; padding: 5px; border-radius: 4px; }
+        .header-left { display: flex; align-items: center; }
+        .btn-sair { background-color: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; transition: background-color 0.3s; }
+        .btn-sair:hover { background-color: #c82333; }
+
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        
+        /* Filtros */
+        .filtros { margin-bottom: 20px; display: flex; align-items: center; gap: 20px; }
+        .filtros select { padding: 10px; border-radius: 4px; border: 1px solid #ccc; }
+
+        /* Lista de Denúncias (Cards) */
+        .lista-denuncias { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .denuncia-card { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); border-left: 5px solid #007bff; }
+        
+        /* Status Color Coding */
+        .denuncia-card.registrado { border-left-color: #6c757d; } /* Cinza */
+        .denuncia-card.nao_apuravel { border-left-color: #ffc107; } /* Amarelo/Alerta */
+        .denuncia-card.em_investigacao { border-left-color: #17a2b8; } /* Azul Claro */
+        .denuncia-card.arquivado { border-left-color: #007bff; } /* Azul */
+        .denuncia-card.concluido_punicao { border-left-color: #dc3545; } /* Vermelho/Ação */
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .card-protocolo { font-weight: bold; font-size: 1.2em; color: #333; }
+        .card-status { padding: 5px 10px; border-radius: 15px; font-size: 0.9em; font-weight: bold; }
+        
+        /* Status Badge Colors */
+        .status-registrado { background-color: #e2e6ea; color: #333; }
+        .status-nao_apuravel { background-color: #fff3cd; color: #856404; }
+        .status-em_investigacao { background-color: #d1ecf1; color: #0c5460; }
+        .status-arquivado { background-color: #cce5ff; color: #004085; }
+        .status-concluido_punicao { background-color: #f8d7da; color: #721c24; }
+
+        .card-body p { margin: 5px 0; font-size: 0.95em; }
+        .btn-detalhes { background-color: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+
+        /* Modal de Detalhes */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border-radius: 8px; max-width: 90%; width: 600px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close-btn:hover, .close-btn:focus { color: #000; text-decoration: none; cursor: pointer; }
+
+        .modal-form-group { margin-top: 20px; }
+        .modal-form-group label { font-weight: bold; display: block; margin-bottom: 5px; }
+        .modal-form-group select, .modal-form-group textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-salvar-conclusao { background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; margin-top: 10px; cursor: pointer; }
+
+        .rodape-voltar { text-align: center; margin-top: 40px; padding-top: 15px; border-top: 1px solid #eee; }
+        .rodape-voltar a { color: #007bff; text-decoration: none; font-weight: bold; }
+        
+        /* Oculta/Exibe campo de punição */
+        #punicao-group { display: none; }
+        .punicao-aplicada-text { color: #dc3545; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .header-admin { flex-direction: column; text-align: center; }
+            .header-admin h1 { margin-bottom: 10px; font-size: 1.3em; }
+            .header-left { flex-direction: column; }
+            .header-left img { margin: 0 0 10px 0; }
+            .container { margin: 20px auto; padding: 0 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-admin">
+        <div class="header-left">
+            <img src="AABB-Marca_original.png" alt="Logo AABB Porto Alegre">
+            <h1>Painel Administrativo - Comissão de Ética e Disciplina</h1>
+        </div>
+        <a href="index.html" class="btn-sair">Sair</a>
+    </div>
+
+    <div class="container">
+        <h2>Lista de Denúncias</h2>
+        
+        <div class="filtros">
+            <label for="filtroStatus">Filtrar por Status:</label>
+            <select id="filtroStatus">
+                <option value="todos">Todos</option>
+                <option value="registrado">1. Registrado</option>
+                <option value="nao_apuravel">2. Não Apurável</option>
+                <option value="em_investigacao">3. Em Investigação</option>
+                <option value="arquivado">4. Arquivado</option>
+                <option value="concluido_punicao">5. Concluído c/ Punição</option>
+            </select>
+        </div>
+
+        <div id="listaDenuncias" class="lista-denuncias">
+            </div>
+    </div>
+    
+    <div id="detalhesModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="modal-protocolo">Detalhes da Denúncia</h2>
+            
+            <p><strong>Registro:</strong> <span id="modal-data"></span></p>
+            <p><strong>Denunciante:</strong> <span id="modal-denunciante"></span> (<span id="modal-associado"></span>)</p>
+            
+            <hr>
+            
+            <p><strong>Quem Cometeu:</strong> <span id="modal-quem"></span></p>
+            <p><strong>Quando:</strong> <span id="modal-quando"></span></p>
+            <p><strong>Onde:</strong> <span id="modal-onde"></span></p>
+            <p><strong>Descrição:</strong> <span id="modal-descricao-text"></span></p> 
+            <p><strong>Outras Info:</strong> <span id="modal-outros-text"></span></p>
+            
+            <p><strong>Anexos:</strong> <ul id="modal-anexos"></ul></p>
+
+            <form id="formAtualizacao">
+                <input type="hidden" id="modal-protocolo-input">
+                
+                <div class="modal-form-group">
+                    <label for="modal-status">Alterar Status:</label>
+                    <select id="modal-status" name="status">
+                        <option value="registrado">1. Registrado</option>
+                        <option value="nao_apuravel">2. Não Apurável</option>
+                        <option value="em_investigacao">3. Em Investigação</option>
+                        <option value="arquivado">4. Arquivado</option>
+                        <option value="concluido_punicao">5. Concluído com Punição</option>
+                    </select>
+                </div>
+                
+                <div class="modal-form-group" id="punicao-group">
+                    <label for="modal-punicao">Punição Aplicada:</label>
+                    <select id="modal-punicao" name="punicao">
+                        <option value="nenhuma" disabled>Nenhuma</option>
+                        <option value="advertencia">Advertência por escrito</option>
+                        <option value="suspensao">Suspensão</option>
+                        <option value="eliminacao">Eliminação do quadro</option>
+                    </select>
+                </div>
+
+                <div class="modal-form-group">
+                    <label for="modal-conclusao">Conclusão da Comissão (Obrigatório para Status Final):</label>
+                    <textarea id="modal-conclusao" name="conclusao" placeholder="Escreva o parecer final da análise (Obrigatório para Não Apurável, Arquivado e Concluído com Punição)."></textarea>
+                </div>
+                <button type="submit" class="btn-salvar-conclusao">Salvar Atualização</button>
+            </form>
+            
+            <p id="punicao-aplicada-display" class="punicao-aplicada-text" style="margin-top: 15px;"></p>
+        </div>
+    </div>
+
+    <div class="rodape-voltar">
+        <a href="index.html">← Voltar para a Página Inicial</a>
+    </div>
+
+    <script>
+        // Mockup de Denúncias Salvas (Simulação do Firebase Firestore)
+        // ATUALIZADO com Protocolos Alfanuméricos
+        const mockDenuncias = [
+            { protocolo: 'CED-2025-1A2B3C4D', dataRegistro: '2025-07-10T14:30:00Z', status: 'registrado', denuncianteNome: 'Denúncia Anônima', denuncianteAssociado: false, quem: 'Funcionário da portaria', quando: '10/07', onde: 'Portaria', descricao: 'Denúncia teste registrada.', outros: 'Nenhum.', anexos: [], conclusao: '', punicao: 'nenhuma' },
+            { protocolo: 'CED-2025-5E6F7G8H', dataRegistro: '2025-07-09T09:00:00Z', status: 'em_investigacao', denuncianteNome: 'João Silva', denuncianteAssociado: true, quem: 'Sócio 555', quando: '05/07', onde: 'Quadra', descricao: 'Denúncia em andamento. Descrição correta aqui.', outros: 'Testemunhas presentes.', anexos: [{ nomeOriginal: 'foto.jpg', caminhoArquivo: '#', tamanho: 120000 }], conclusao: '', punicao: 'nenhuma' },
+            { protocolo: 'CED-2025-9I0J1K2L', dataRegistro: '2025-07-05T18:00:00Z', status: 'concluido_punicao', denuncianteNome: 'Maria Santos', denuncianteAssociado: false, quem: 'Desconhecido', quando: '01/07', onde: 'Vestiário', descricao: 'Denúncia concluída. Descrição correta aqui.', outros: 'Investigação feita.', anexos: [], conclusao: 'O caso foi apurado e medidas internas foram tomadas. Situação resolvida.', punicao: 'advertencia' },
+            { protocolo: 'CED-2025-0004', dataRegistro: '2025-07-01T10:00:00Z', status: 'nao_apuravel', denuncianteNome: 'Anon', denuncianteAssociado: false, quem: 'N/A', quando: '01/07', onde: 'Geral', descricao: 'Reclamação sobre lentidão no atendimento da lanchonete.', outros: 'N/A', anexos: [], conclusao: 'Reclamação classificada como serviço/operacional. Encaminhada para gerência de atendimento. Não se trata de infração ética apurável.', punicao: 'nenhuma' },
+            { protocolo: 'CED-2025-0005', dataRegistro: '2025-06-25T12:00:00Z', status: 'arquivado', denuncianteNome: 'Carlos', denuncianteAssociado: true, quem: 'Instrutor X', quando: '20/06', onde: 'Academia', descricao: 'Alegação de falta de respeito do instrutor.', outros: 'Ocorrência sem testemunhas.', anexos: [], conclusao: 'A denúncia foi investigada, mas a insuficiência de provas materiais e a falta de testemunhas tornaram a apuração inconclusiva. Caso arquivado.', punicao: 'nenhuma' }
+        ];
+
+        const listaDenuncias = document.getElementById('listaDenuncias');
+        const filtroStatus = document.getElementById('filtroStatus');
+        const detalhesModal = document.getElementById('detalhesModal');
+        const closeBtn = document.querySelector('.close-btn');
+        const formAtualizacao = document.getElementById('formAtualizacao');
+        const statusSelect = document.getElementById('modal-status');
+        const punicaoSelect = document.getElementById('modal-punicao');
+        const punicaoGroup = document.getElementById('punicao-group');
+        const punicaoAplicadaDisplay = document.getElementById('punicao-aplicada-display');
+
+
+        const statusMap = {
+            'registrado': '1. Registrado',
+            'nao_apuravel': '2. Não Apurável',
+            'em_investigacao': '3. Em Investigação',
+            'arquivado': '4. Arquivado',
+            'concluido_punicao': '5. Concluído c/ Punição'
+        };
+
+        const punicaoMap = {
+            'nenhuma': 'Nenhuma',
+            'advertencia': 'Advertência por escrito',
+            'suspensao': 'Suspensão',
+            'eliminacao': 'Eliminação do quadro'
+        };
+
+        // Função para formatar data (simples)
+        function formatarData(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        }
+        
+        // Função para controlar a visibilidade do campo de Punição
+        function togglePunicaoField() {
+            if (statusSelect.value === 'concluido_punicao') {
+                punicaoGroup.style.display = 'block';
+                // Força a seleção a ser diferente de 'nenhuma' (o 'nenhuma' está desabilitado no HTML, mas garantimos aqui por segurança)
+                if (punicaoSelect.value === 'nenhuma') {
+                    punicaoSelect.value = 'advertencia'; 
+                }
+            } else {
+                punicaoGroup.style.display = 'none';
+                punicaoSelect.value = 'nenhuma'; // Reseta visualmente a punição
+            }
+        }
+        
+        statusSelect.addEventListener('change', togglePunicaoField);
+
+
+        // Função para renderizar os cards
+        function renderizarDenuncias(denuncias, filtro = 'todos') {
+            listaDenuncias.innerHTML = '';
+            
+            denuncias.sort((a, b) => new Date(b.dataRegistro) - new Date(a.dataRegistro));
+
+            const denunciasFiltradas = denuncias.filter(d => filtro === 'todos' || d.status === filtro);
+
+            if (denunciasFiltradas.length === 0) {
+                listaDenuncias.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Nenhuma denúncia encontrada com este status.</p>';
+                return;
+            }
+
+            denunciasFiltradas.forEach(denuncia => {
+                const statusClass = denuncia.status;
+                const statusText = statusMap[denuncia.status];
+                
+                const card = document.createElement('div');
+                card.className = `denuncia-card ${statusClass}`;
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="card-protocolo">${denuncia.protocolo}</span>
+                        <span class="card-status status-${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Data:</strong> ${formatarData(denuncia.dataRegistro)}</p>
+                        <p><strong>Denunciante:</strong> ${denuncia.denuncianteNome}</p>
+                        <p><strong>Quem:</strong> ${denuncia.quem}</p>
+                        <button class="btn-detalhes" data-protocolo="${denuncia.protocolo}">Ver Detalhes</button>
+                    </div>
+                `;
+                listaDenuncias.appendChild(card);
+            });
+        }
+
+        // Evento de Filtro
+        filtroStatus.addEventListener('change', (e) => {
+            renderizarDenuncias(mockDenuncias, e.target.value);
+        });
+        
+        // Evento para abrir o Modal de Detalhes
+        listaDenuncias.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-detalhes')) {
+                const protocolo = e.target.getAttribute('data-protocolo');
+                const denuncia = mockDenuncias.find(d => d.protocolo === protocolo);
+                
+                if (denuncia) {
+                    // Preenche o Modal
+                    document.getElementById('modal-protocolo').textContent = `Detalhes: ${denuncia.protocolo}`;
+                    document.getElementById('modal-protocolo-input').value = denuncia.protocolo;
+                    document.getElementById('modal-data').textContent = formatarData(denuncia.dataRegistro);
+                    document.getElementById('modal-denunciante').textContent = denuncia.denuncianteNome;
+                    document.getElementById('modal-associado').textContent = denuncia.denuncianteAssociado ? 'Associado' : 'Não Associado';
+                    document.getElementById('modal-quem').textContent = denuncia.quem;
+                    document.getElementById('modal-quando').textContent = denuncia.quando;
+                    document.getElementById('modal-onde').textContent = denuncia.onde;
+                    
+                    // Preenchendo a descrição e outras info nos spans
+                    document.getElementById('modal-descricao-text').textContent = denuncia.descricao;
+                    document.getElementById('modal-outros-text').textContent = denuncia.outros;
+                    
+                    document.getElementById('modal-status').value = denuncia.status;
+                    document.getElementById('modal-conclusao').value = denuncia.conclusao || '';
+                    document.getElementById('modal-punicao').value = denuncia.punicao || 'nenhuma';
+                    
+                    // Exibe a punição se já foi aplicada
+                    if (denuncia.status === 'concluido_punicao') {
+                        punicaoAplicadaDisplay.textContent = `PUNIÇÃO APLICADA: ${punicaoMap[denuncia.punicao].toUpperCase()}`;
+                    } else {
+                        punicaoAplicadaDisplay.textContent = '';
+                    }
+
+                    // Preenche Anexos 
+                    const anexosList = document.getElementById('modal-anexos');
+                    anexosList.innerHTML = denuncia.anexos && denuncia.anexos.length > 0 ? denuncia.anexos.map(a => `<li>${a.nomeOriginal} <a href="#">[Baixar]</a></li>`).join('') : '<li>Nenhum anexo.</li>';
+
+                    // Controla a visibilidade do campo de punição ao abrir o modal
+                    togglePunicaoField();
+                    detalhesModal.style.display = 'block';
+                }
+            }
+        });
+
+        // Lógica para fechar o Modal
+        closeBtn.onclick = function() {
+            detalhesModal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == detalhesModal) {
+                detalhesModal.style.display = 'none';
+            }
+        }
+        
+        // Simulação de Salvamento (F5)
+        formAtualizacao.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const protocolo = document.getElementById('modal-protocolo-input').value;
+            const novoStatus = statusSelect.value;
+            const novaConclusao = document.getElementById('modal-conclusao').value.trim();
+            let novaPunicao = punicaoSelect.value;
+            
+            const isFinalStatus = ['nao_apuravel', 'arquivado', 'concluido_punicao'].includes(novoStatus);
+            
+            // 1. Validação de Conclusão (Obrigatória para status final)
+            if (isFinalStatus && novaConclusao === '') {
+                alert('A Conclusão da Comissão é obrigatória para este status final.');
+                return;
+            }
+            
+            // 2. Regra: Se Arquivado ou Não Apurável, Punição DEVE ser 'nenhuma'
+            if (novoStatus === 'arquivado' || novoStatus === 'nao_apuravel') {
+                novaPunicao = 'nenhuma';
+            }
+            
+            // 3. Regra: Se Concluído com Punição, Punição NÃO PODE ser 'nenhuma'
+            if (novoStatus === 'concluido_punicao' && novaPunicao === 'nenhuma') {
+                 alert('É obrigatório selecionar uma Punição (Advertência, Suspensão ou Eliminação) ao classificar como "Concluído com Punição".');
+                 return;
+            }
+            
+            // Encontra a denúncia no mock (simulando a atualização no Firestore)
+            const denunciaIndex = mockDenuncias.findIndex(d => d.protocolo === protocolo);
+            if (denunciaIndex !== -1) {
+                mockDenuncias[denunciaIndex].status = novoStatus;
+                mockDenuncias[denunciaIndex].conclusao = novaConclusao;
+                mockDenuncias[denunciaIndex].punicao = novaPunicao;
+
+                alert(`Denúncia ${protocolo} atualizada com sucesso para status: ${statusMap[novoStatus]}! (Punição: ${punicaoMap[novaPunicao].toUpperCase()})`);
+                
+                // Atualiza a lista e fecha o modal
+                renderizarDenuncias(mockDenuncias, filtroStatus.value);
+                detalhesModal.style.display = 'none';
+            }
+        });
+
+        // Inicializa a lista ao carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            renderizarDenuncias(mockDenuncias);
+        });
+    </script>
+</body>
+</html>
+```eof

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultar Protocolo - AABB Porto Alegre</title>
+    <style>
+        /* Estilos baseados no index.html */
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f0f4f7; color: #333; }
+        .container { max-width: 800px; margin: 50px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        header { text-align: center; margin-bottom: 30px; }
+        header a { text-decoration: none; }
+        header img { max-width: 180px; height: auto; margin-bottom: 15px; background-color: black; padding: 5px; border-radius: 5px; }
+        h1 { color: #0056b3; font-size: 1.8em; margin-bottom: 20px; }
+
+        /* Estilos de Busca e Resultado */
+        .busca-form { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr auto; 
+            gap: 10px; 
+            margin-bottom: 30px; 
+        }
+        .busca-form input[type="text"], .busca-form input[type="email"] { 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+        }
+        .btn-consultar { 
+            background-color: #007bff; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: background-color 0.3s; 
+        }
+        .btn-consultar:hover { background-color: #0056b3; }
+
+        .resultado { border: 1px solid #ddd; padding: 20px; border-radius: 4px; background-color: #f9f9f9; }
+        .status-badge { display: inline-block; padding: 5px 10px; border-radius: 15px; font-weight: bold; margin-bottom: 15px; }
+        .status-registrado { background-color: #ffc107; color: #333; }
+        .status-em-andamento { background-color: #17a2b8; color: white; }
+        .status-concluido { background-color: #28a745; color: white; }
+
+        /* Estilos da Timeline Visual */
+        .timeline { display: flex; justify-content: space-between; position: relative; padding: 20px 0; margin-bottom: 20px; }
+        .timeline::before { content: ''; position: absolute; top: 30px; left: 10%; right: 10%; height: 2px; background-color: #ccc; z-index: 1; }
+        .timeline-item { text-align: center; flex: 1; position: relative; z-index: 2; }
+        .timeline-dot { width: 20px; height: 20px; background-color: #ccc; border-radius: 50%; margin: 0 auto 10px; border: 3px solid white; transition: background-color 0.3s; }
+        .timeline-item.active .timeline-dot { background-color: #007bff; }
+        .timeline-label { font-size: 0.9em; font-weight: bold; color: #555; margin-top: 5px; }
+
+        /* Conclusão (só aparece se status concluído) */
+        .conclusao-box { margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px; }
+        .conclusao-box h3 { color: #28a745; }
+        .alerta-erro { background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px; text-align: center; display: none; }
+        
+        .rodape-voltar { text-align: center; margin-top: 40px; padding-top: 15px; border-top: 1px solid #eee; }
+        .rodape-voltar a { color: #007bff; text-decoration: none; font-weight: bold; }
+
+        @media (max-width: 600px) {
+            .busca-form { grid-template-columns: 1fr; } 
+            .timeline { flex-direction: column; align-items: flex-start; }
+            .timeline::before { top: 10%; bottom: 10%; left: 18px; right: auto; width: 2px; height: 80%; }
+            .timeline-item { text-align: left; padding-left: 40px; margin-bottom: 20px; flex: none; width: 100%; }
+            .timeline-dot { position: absolute; left: 5px; top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html"><img src="AABB-Marca_original.png" alt="Logo AABB Porto Alegre"></a>
+            <h1>Consultar Protocolo de Denúncia</h1>
+        </header>
+
+        <p>Utilize o código único (protocolo) ou o e-mail de registro para acompanhar o status da sua denúncia.</p>
+
+        <form id="consultaForm" class="busca-form">
+            <input type="text" id="protocoloBusca" placeholder="Digite seu protocolo (Ex: CED-2025-XXXX)">
+            <input type="email" id="emailBusca" placeholder="Ou seu e-mail de registro">
+            <button type="submit" class="btn-consultar" id="btnConsultar">Consultar</button>
+        </form>
+
+        <div class="alerta-erro" id="alerta-erro">
+            Protocolo/E-mail não encontrado ou a denúncia é anônima e exige o protocolo.
+        </div>
+
+        <div id="resultado-denuncia" class="resultado" style="display: none;">
+            <p><strong>Protocolo:</strong> <span id="res-protocolo"></span></p>
+            <p><strong>Data de Registro:</strong> <span id="res-data"></span></p>
+            <p id="res-tipo-denuncia"><strong>Tipo:</strong> <span id="res-denunciante-info"></span></p>
+            
+            <span class="status-badge" id="res-status-badge"></span>
+
+            <h3>Progresso da Análise</h3>
+            <div class="timeline">
+                <div class="timeline-item active" id="item-registrado">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-label">1. Registrado</div>
+                </div>
+                <div class="timeline-item" id="item-andamento">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-label">2. Em Andamento</div>
+                </div>
+                <div class="timeline-item" id="item-concluido">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-label">3. Concluído</div>
+                </div>
+            </div>
+
+            <div class="conclusao-box" id="res-conclusao-box" style="display: none;">
+                <h3>Conclusão da Comissão de Ética e Disciplina</h3>
+                <p id="res-conclusao"></p>
+            </div>
+        </div>
+        
+        <div class="rodape-voltar">
+            <a href="index.html">← Voltar para a Página Inicial</a>
+        </div>
+    </div>
+
+    <script>
+        const consultaForm = document.getElementById('consultaForm');
+        const resultadoDiv = document.getElementById('resultado-denuncia');
+        const alertaErro = document.getElementById('alerta-erro');
+        const conclusaoBox = document.getElementById('res-conclusao-box');
+        
+        // --- Mockup de Denúncias Salvas (Simulação do Firebase Firestore) ---
+        const mockDenuncias = [
+            {
+                protocolo: 'CED-2025-1A2B3C4D', // Denúncia Anônima
+                dataRegistro: '15/05/2025 às 10:00',
+                status: 'registrado',
+                denunciante: { anonima: true, email: null },
+                conclusao: ''
+            },
+            {
+                protocolo: 'CED-2025-5E6F7G8H', // Denúncia por E-mail (Em Andamento)
+                dataRegistro: '10/06/2025 às 15:45',
+                status: 'em_andamento',
+                denunciante: { anonima: false, email: 'joao.silva@exemplo.com' },
+                conclusao: ''
+            },
+            {
+                protocolo: 'CED-2025-9I0J1K2L', // Denúncia por E-mail (Concluída)
+                dataRegistro: '01/07/2025 às 09:15',
+                status: 'concluido',
+                denunciante: { anonima: false, email: 'maria.santos@outroexemplo.com' },
+                conclusao: 'Após análise completa e oitiva das partes, a Comissão concluiu que houve uma violação leve do Código de Conduta. As medidas corretivas foram aplicadas internamente e o caso foi encerrado.'
+            }
+        ];
+
+        consultaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const protocoloBusca = document.getElementById('protocoloBusca').value.trim().toUpperCase();
+            const emailBusca = document.getElementById('emailBusca').value.trim().toLowerCase();
+
+            resultadoDiv.style.display = 'none';
+            alertaErro.style.display = 'none';
+            conclusaoBox.style.display = 'none';
+            
+            let denuncia = null;
+
+            if (protocoloBusca) {
+                denuncia = mockDenuncias.find(d => d.protocolo === protocoloBusca);
+            } 
+            
+            if (!denuncia && emailBusca) {
+                denuncia = mockDenuncias.find(d => 
+                    !d.denunciante.anonima && 
+                    d.denunciante.email === emailBusca
+                );
+            }
+            
+            if (denuncia) {
+                document.getElementById('res-protocolo').textContent = denuncia.protocolo;
+                document.getElementById('res-data').textContent = denuncia.dataRegistro;
+                
+                const tipoDenunciaSpan = document.getElementById('res-denunciante-info');
+                tipoDenunciaSpan.textContent = denuncia.denunciante.anonima 
+                    ? 'Anônima (Protocolo Obrigatório)' 
+                    : `Identificada (E-mail: ${denuncia.denunciante.email})`;
+
+                const statusBadge = document.getElementById('res-status-badge');
+                statusBadge.className = 'status-badge';
+                
+                document.querySelectorAll('.timeline-item').forEach(item => item.classList.remove('active'));
+
+                if (denuncia.status === 'registrado') {
+                    statusBadge.textContent = 'Status Atual: Registrado';
+                    statusBadge.classList.add('status-registrado');
+                    document.getElementById('item-registrado').classList.add('active');
+                } else if (denuncia.status === 'em_andamento') {
+                    statusBadge.textContent = 'Status Atual: Em Andamento';
+                    statusBadge.classList.add('status-em-andamento');
+                    document.getElementById('item-registrado').classList.add('active');
+                    document.getElementById('item-andamento').classList.add('active');
+                } else if (denuncia.status === 'concluido') {
+                    statusBadge.textContent = 'Status Atual: Concluído';
+                    statusBadge.classList.add('status-concluido');
+                    document.getElementById('item-registrado').classList.add('active');
+                    document.getElementById('item-andamento').classList.add('active');
+                    document.getElementById('item-concluido').classList.add('active');
+                }
+                
+                if (denuncia.status === 'concluido' && denuncia.conclusao) {
+                    document.getElementById('res-conclusao').textContent = denuncia.conclusao;
+                    conclusaoBox.style.display = 'block';
+                }
+
+                resultadoDiv.style.display = 'block';
+
+            } else {
+                alertaErro.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+```eof
